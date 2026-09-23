@@ -8,11 +8,7 @@ export class DefaultParserConfig {
     static readonly propertyDeclarationsToIgnore: PropertyDeclarationsToIgnore = {
         opaque: 'isOpaque = false',
         userInteractionEnabled: 'isUserInteractionEnabled = false',
-        customClass: 'customClass =',
-        horizontalHuggingPriority: 'setContentHuggingPriority(UILayoutPriority(251), for: .horizontal)',
-        verticalHuggingPriority: 'setContentHuggingPriority(UILayoutPriority(251), for: .vertical)',
-        horizontalCompressionResistancePriority: 'setContentCompressionResistancePriority(UILayoutPriority(250), for: .horizontal)',
-        verticalCompressionResistancePriority: 'setContentCompressionResistancePriority(UILayoutPriority(250), for: .vertical)'
+        customClass: 'customClass ='
     }
 
     static readonly propertiesToIgnore: PropertiesToIgnore = {

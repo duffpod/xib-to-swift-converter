@@ -51,11 +51,7 @@ The following is the default configuration which is used by parser:
     "propertyDeclarationsToIgnore": {
         "opaque": "isOpaque = false",
         "userInteractionEnabled": "isUserInteractionEnabled = false",
-        "customClass": "customClass =",
-        "horizontalHuggingPriority": "setContentHuggingPriority(UILayoutPriority(251), for: .horizontal)",
-        "verticalHuggingPriority": "setContentHuggingPriority(UILayoutPriority(251), for: .vertical)",
-        "horizontalCompressionResistancePriority": "setContentCompressionResistancePriority(UILayoutPriority(250), for: .horizontal)",
-        "verticalCompressionResistancePriority": "setContentCompressionResistancePriority(UILayoutPriority(250), for: .vertical)"
+        "customClass": "customClass ="
     },
     "propertiesToIgnore": {
         "label": [
