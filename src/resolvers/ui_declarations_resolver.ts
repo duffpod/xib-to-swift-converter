@@ -254,11 +254,12 @@ export class UIDeclarationsGen {
         return addAditionalConfiguration[tag][node.tag] != undefined ? addAditionalConfiguration[tag][node.tag]() : ''
     }
 
-    public genereteBaseViewProperties(baseView?: XibNode): string {
+    public genereteBaseViewProperties(baseViews: XibNode[]): string {
         let property: string = '';
-        if (baseView == undefined) return property;
-        for (const node of baseView.content) {
-            property += this.resolveSubNode(resolveIdToPropetyName(baseView.attrs.id), node);
+        for (const baseView of baseViews) {
+            let variableName = resolveIdToPropetyName(baseView.attrs.id);
+            property += this.resolveAtributes(baseView, variableName).trimStart();
+            property += this.generateDeclarationForSubNodes(baseView.tag, baseView.content, variableName);
         }
         return property;
     }

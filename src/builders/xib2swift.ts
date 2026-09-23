@@ -29,7 +29,7 @@ export class Xib2Swift {
             constraintOutletDeclarations.map(outlet => outlet.declaration).join('');
         this.uiDeclarationsAsList = uiDeclarationsGenerator.generateUIDelarationsAsList(subviews).concat(constraintOutletDeclarations);
         this.viewHierarchy = viewHierarchyGenerator.generateCompleteViewHierachy(subviews);
-        this.baseViewProperties = uiDeclarationsGenerator.genereteBaseViewProperties(this.xib.baseView);
+        this.baseViewProperties = uiDeclarationsGenerator.genereteBaseViewProperties(this.xib.baseViews);
     }
 
     public convertAsNoob(): string {

@@ -16,9 +16,11 @@ export class DefaultParserConfig {
         button: ['buttonType', 'lineBreakMode'],
         imageView: ['catalog'],
         tableView: ['style'],
+        tableViewCell: ['rowHeight'],
+        tableViewCellContentView: ['tableViewCell'],
         collectionView: ['dataMode'],
         segmentedControl: ['segmentControlStyle'],
-        common: ['fixedFrame', 'id', 'adjustsLetterSpacingToFitWidth', 'customModule', 'customModuleProvider', 'misplaced', 'ambiguous', 'userLabel', 'placeholderIntrinsicWidth', 'placeholderIntrinsicHeight'],
+        common: ['fixedFrame', 'id', 'key', 'adjustsLetterSpacingToFitWidth', 'customModule', 'customModuleProvider', 'misplaced', 'ambiguous', 'userLabel', 'placeholderIntrinsicWidth', 'placeholderIntrinsicHeight'],
     }
 
     static readonly propertiesToCast: PropertiesToCast = {

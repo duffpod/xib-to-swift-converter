@@ -67,6 +67,12 @@ The following is the default configuration which is used by parser:
         "tableView": [
             "style"
         ],
+        "tableViewCell": [
+            "rowHeight"
+        ],
+        "tableViewCellContentView": [
+            "tableViewCell"
+        ],
         "collectionView": [
             "dataMode"
         ],
@@ -76,6 +82,7 @@ The following is the default configuration which is used by parser:
         "common": [
             "fixedFrame",
             "id",
+            "key",
             "adjustsLetterSpacingToFitWidth",
             "customModule",
             "customModuleProvider",

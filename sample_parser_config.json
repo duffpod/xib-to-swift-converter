@@ -20,6 +20,12 @@
         "tableView": [
             "style"
         ],
+        "tableViewCell": [
+            "rowHeight"
+        ],
+        "tableViewCellContentView": [
+            "tableViewCell"
+        ],
         "collectionView": [
             "dataMode"
         ],
@@ -29,6 +35,7 @@
         "common": [
             "fixedFrame",
             "id",
+            "key",
             "adjustsLetterSpacingToFitWidth",
             "customModule",
             "customModuleProvider",
