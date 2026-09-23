@@ -9,10 +9,11 @@ function resolveArgs() {
         console.log('For usage details: xib-to-swift-converter --help');
         process.exit(1);
     }
-    let xibPath = argv[2];
+    let xibPath = '';
     let configPath = ''
     let outputPath = '';
-    argv.forEach((val, index) => {
+    for (let index = 2; index < argv.length; index++) {
+        let val = argv[index];
         if (val == '-h' || val == '--help') {
             console.log('Basic usage: xib-to-swift-converter <path-to-xib-file>');
             console.log('Options:');
@@ -23,15 +24,29 @@ function resolveArgs() {
             process.exit(0);
         }
         else if (val == '-p' || val == '--path') {
-            xibPath = argv[index + 1];
+            xibPath = argv[++index] ?? '';
         }
         else if (val == '-o' || val == '--output-path') {
-            outputPath = argv[index + 1];
+            outputPath = argv[++index] ?? '';
         }
         else if (val == "-c" || val == "--config") {
-            configPath = argv[index + 1];
+            configPath = argv[++index] ?? '';
         }
-    });
+        else if (val.startsWith('-')) {
+            console.log('Oops! Unknown option: ' + val);
+            console.log('For usage details: xib-to-swift-converter --help');
+            process.exit(1);
+        }
+        // path to xib can come before or after the options
+        else if (xibPath == '') {
+            xibPath = val;
+        }
+    }
+    if (xibPath == '') {
+        console.log('Oops! Path to xib file is missing.');
+        console.log('For usage details: xib-to-swift-converter --help');
+        process.exit(1);
+    }
 
     let configuration: ParserConfiguration = {};
     if (configPath != '') {
