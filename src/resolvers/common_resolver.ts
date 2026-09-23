@@ -3,7 +3,7 @@ import { XibNode } from "../types/entities";
 
 export class Resolve {
 
-    public static propertiesWithSetMethod = ['horizontalHuggingPriority', 'verticalHuggingPriority', 'horizontalCompressionResistancePriority', 'verticalCompressionResistancePriority'];
+    public static propertiesWithSetMethod = ['horizontalHuggingPriority', 'verticalHuggingPriority', 'horizontalCompressionResistancePriority', 'verticalCompressionResistancePriority', 'animating'];
 
     public static Color(node: XibNode): string {
         let declaration: string = '';
@@ -65,6 +65,9 @@ export class Resolve {
             },
             'verticalCompressionResistancePriority': () => {
                 return `setContentCompressionResistancePriority(UILayoutPriority(${propertyValue}), for: .vertical)`;
+            },
+            'animating': () => {
+                return propertyValue == 'true' ? 'startAnimating()' : '';
             }
         }
         return setMethodResolver[propertyName] != undefined ? setMethodResolver[propertyName]() : '';

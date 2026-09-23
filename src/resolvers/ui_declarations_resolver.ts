@@ -78,7 +78,9 @@ export class UIDeclarationsGen {
             let propertyValue = this.resolveResultValue(attributes[key], key, node);
             let attributeDeclarion: string;
             if (Resolve.propertiesWithSetMethod.includes(propertyName)) {
-                attributeDeclarion = `\t${variableName}.${Resolve.resolveSetMethodForProperty(propertyName, propertyValue)}\n`;
+                let setMethod = Resolve.resolveSetMethodForProperty(propertyName, propertyValue);
+                if (setMethod == '') continue;
+                attributeDeclarion = `\t${variableName}.${setMethod}\n`;
             } else {
                 attributeDeclarion = `\t${variableName}.${propertyName} = ${propertyValue}\n`;
             }

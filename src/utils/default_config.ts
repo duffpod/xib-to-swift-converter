@@ -17,7 +17,8 @@ export class DefaultParserConfig {
         imageView: ['catalog'],
         tableView: ['style'],
         collectionView: ['dataMode'],
-        common: ['fixedFrame', 'id', 'adjustsLetterSpacingToFitWidth', 'customModule', 'customModuleProvider', 'misplaced', 'userLabel'],
+        segmentedControl: ['segmentControlStyle'],
+        common: ['fixedFrame', 'id', 'adjustsLetterSpacingToFitWidth', 'customModule', 'customModuleProvider', 'misplaced', 'ambiguous', 'userLabel', 'placeholderIntrinsicWidth', 'placeholderIntrinsicHeight'],
     }
 
     static readonly propertiesToCast: PropertiesToCast = {
@@ -37,10 +38,28 @@ export class DefaultParserConfig {
             pagingEnabled: 'isPagingEnabled',
             prefetchingEnabled: 'isPrefetchingEnabled',
         },
+        stackView: {
+            layoutMarginsRelativeArrangement: 'isLayoutMarginsRelativeArrangement',
+            baselineRelativeArrangement: 'isBaselineRelativeArrangement',
+        },
+        textView: {
+            editable: 'isEditable',
+            selectable: 'isSelectable',
+        },
         common: {
             clipsSubviews: 'clipsToBounds',
             opaque: 'isOpaque',
             userInteractionEnabled: 'isUserInteractionEnabled',
+            hidden: 'isHidden',
+            multipleTouchEnabled: 'isMultipleTouchEnabled',
+            exclusiveTouch: 'isExclusiveTouch',
+            enabled: 'isEnabled',
+            selected: 'isSelected',
+            highlighted: 'isHighlighted',
+            continuous: 'isContinuous',
+            scrollEnabled: 'isScrollEnabled',
+            pagingEnabled: 'isPagingEnabled',
+            directionalLockEnabled: 'isDirectionalLockEnabled',
         }
     }
 }

@@ -70,6 +70,9 @@ The following is the default configuration which is used by parser:
         "collectionView": [
             "dataMode"
         ],
+        "segmentedControl": [
+            "segmentControlStyle"
+        ],
         "common": [
             "fixedFrame",
             "id",
@@ -77,7 +80,10 @@ The following is the default configuration which is used by parser:
             "customModule",
             "customModuleProvider",
             "misplaced",
-            "userLabel"
+            "ambiguous",
+            "userLabel",
+            "placeholderIntrinsicWidth",
+            "placeholderIntrinsicHeight"
         ]
     },
     "propertiesToCast": {
@@ -97,10 +103,28 @@ The following is the default configuration which is used by parser:
             "pagingEnabled": "isPagingEnabled",
             "prefetchingEnabled": "isPrefetchingEnabled"
         },
+        "stackView": {
+            "layoutMarginsRelativeArrangement": "isLayoutMarginsRelativeArrangement",
+            "baselineRelativeArrangement": "isBaselineRelativeArrangement"
+        },
+        "textView": {
+            "editable": "isEditable",
+            "selectable": "isSelectable"
+        },
         "common": {
             "clipsSubviews": "clipsToBounds",
             "opaque": "isOpaque",
-            "userInteractionEnabled": "isUserInteractionEnabled"
+            "userInteractionEnabled": "isUserInteractionEnabled",
+            "hidden": "isHidden",
+            "multipleTouchEnabled": "isMultipleTouchEnabled",
+            "exclusiveTouch": "isExclusiveTouch",
+            "enabled": "isEnabled",
+            "selected": "isSelected",
+            "highlighted": "isHighlighted",
+            "continuous": "isContinuous",
+            "scrollEnabled": "isScrollEnabled",
+            "pagingEnabled": "isPagingEnabled",
+            "directionalLockEnabled": "isDirectionalLockEnabled"
         }
     }
 }

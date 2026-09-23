@@ -23,6 +23,9 @@
         "collectionView": [
             "dataMode"
         ],
+        "segmentedControl": [
+            "segmentControlStyle"
+        ],
         "common": [
             "fixedFrame",
             "id",
@@ -30,7 +33,10 @@
             "customModule",
             "customModuleProvider",
             "misplaced",
-            "userLabel"
+            "ambiguous",
+            "userLabel",
+            "placeholderIntrinsicWidth",
+            "placeholderIntrinsicHeight"
         ]
     },
     "propertiesToCast": {
@@ -50,10 +56,28 @@
             "pagingEnabled": "isPagingEnabled",
             "prefetchingEnabled": "isPrefetchingEnabled"
         },
+        "stackView": {
+            "layoutMarginsRelativeArrangement": "isLayoutMarginsRelativeArrangement",
+            "baselineRelativeArrangement": "isBaselineRelativeArrangement"
+        },
+        "textView": {
+            "editable": "isEditable",
+            "selectable": "isSelectable"
+        },
         "common": {
             "clipsSubviews": "clipsToBounds",
             "opaque": "isOpaque",
-            "userInteractionEnabled": "isUserInteractionEnabled"
+            "userInteractionEnabled": "isUserInteractionEnabled",
+            "hidden": "isHidden",
+            "multipleTouchEnabled": "isMultipleTouchEnabled",
+            "exclusiveTouch": "isExclusiveTouch",
+            "enabled": "isEnabled",
+            "selected": "isSelected",
+            "highlighted": "isHighlighted",
+            "continuous": "isContinuous",
+            "scrollEnabled": "isScrollEnabled",
+            "pagingEnabled": "isPagingEnabled",
+            "directionalLockEnabled": "isDirectionalLockEnabled"
         }
     }
 }
