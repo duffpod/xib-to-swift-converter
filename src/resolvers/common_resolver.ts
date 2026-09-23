@@ -16,11 +16,13 @@ export class Resolve {
         else if (node.attrs.customColorSpace == 'displayP3' || node.attrs.colorSpace == 'displayP3') {
             declaration = `UIColor(displayP3Red: ${node.attrs.red}, green: ${node.attrs.green}, blue: ${node.attrs.blue}, alpha: ${node.attrs.alpha})`
         }
+        // calibrated color spaces have 1.8 gamma, so the same components look lighter than in sRGB.
+        // Swift marks their CGColorSpace constants unavailable, so they are looked up by name
         else if (node.attrs.customColorSpace == 'calibratedWhite' || node.attrs.colorSpace == 'calibratedWhite') {
-            declaration = `UIColor(white: ${node.attrs.white}, alpha: ${node.attrs.alpha})`
+            declaration = `UIColor(cgColor: CGColor(colorSpace: CGColorSpace(name: "kCGColorSpaceGenericGray" as CFString)!, components: [${node.attrs.white}, ${node.attrs.alpha}])!)`
         }
         else if (node.attrs.customColorSpace == 'calibratedRGB' || node.attrs.colorSpace == 'calibratedRGB') {
-            declaration = `UIColor(red: ${node.attrs.red}, green: ${node.attrs.green}, blue: ${node.attrs.blue}, alpha: ${node.attrs.alpha})`
+            declaration = `UIColor(cgColor: CGColor(colorSpace: CGColorSpace(name: "kCGColorSpaceGenericRGB" as CFString)!, components: [${node.attrs.red}, ${node.attrs.green}, ${node.attrs.blue}, ${node.attrs.alpha}])!)`
         }
         else if (node.attrs.systemColor != undefined) {
             declaration = `.${node.attrs.systemColor.replace('Color', '')}`
