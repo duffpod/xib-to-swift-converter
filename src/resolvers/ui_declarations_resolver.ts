@@ -172,10 +172,7 @@ export class UIDeclarationsGen {
                     }
                     return property;
                 },
-                'fontDescription': () => {
-                    let weight = node.attrs.weight != undefined ? `, weight: .${node.attrs.weight}` : '';
-                    return `\t${variableName}.titleLabel?.font = .systemFont(ofSize: ${node.attrs.pointSize}${weight})\n`
-                },
+                'fontDescription': () => { return `\t${variableName}.titleLabel?.font = ${Resolve.Font(node)}\n` },
                 'buttonConfiguration': () => {
                     let property = `\t${variableName}.configuration = .${node.attrs.style}()\n`;
                     property += `\t${variableName}.setTitle(${swiftString(node.attrs.title ?? '')}, for: .normal)\n`;
@@ -222,10 +219,7 @@ export class UIDeclarationsGen {
                 'directionalEdgeInsets': () => {
                     return `\t${variableName}.${node.attrs.key} = NSDirectionalEdgeInsets(top: ${node.attrs.top ?? 0}, leading: ${node.attrs.leading ?? 0}, bottom: ${node.attrs.bottom ?? 0}, trailing: ${node.attrs.trailing ?? 0})\n`
                 },
-                'fontDescription': () => {
-                    let weight = node.attrs.weight != undefined ? `, weight: .${node.attrs.weight}` : '';
-                    return `\t${variableName}.font = .systemFont(ofSize: ${node.attrs.pointSize}${weight})\n`
-                },
+                'fontDescription': () => { return `\t${variableName}.font = ${Resolve.Font(node)}\n` },
                 //'rect': () => { return `\t${variableName}.frame = CGRect(x: ${node.attrs.x}, y: ${node.attrs.y}, width: ${node.attrs.width}, height: ${node.attrs.height})\n` },
                 'connections': () => {
                     let property = '';

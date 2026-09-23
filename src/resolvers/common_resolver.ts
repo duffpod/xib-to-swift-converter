@@ -1,5 +1,5 @@
 import { XibNode } from "../types/entities";
-import { swiftString } from "../utils/utils";
+import { lowerFirstletter, swiftString } from "../utils/utils";
 
 
 export class Resolve {
@@ -57,6 +57,36 @@ export class Resolve {
         }
 
         return declaration;
+    }
+
+    public static Font(node: XibNode): string {
+        let size = node.attrs.pointSize;
+        if (node.attrs.style != undefined) {
+            return `.preferredFont(forTextStyle: ${Resolve.TextStyle(node.attrs.style)})`;
+        }
+        if (node.attrs.name != undefined) {
+            return `UIFont(name: ${swiftString(node.attrs.name)}, size: ${size}) ?? .systemFont(ofSize: ${size})`;
+        }
+        // boldSystemFont(ofSize:) is semibold, while bold system font in xib is bold
+        if (node.attrs.type == 'boldSystem') {
+            return `.systemFont(ofSize: ${size}, weight: .bold)`;
+        }
+        if (node.attrs.type == 'italicSystem') {
+            return `.italicSystemFont(ofSize: ${size})`;
+        }
+        let weight = node.attrs.weight != undefined ? `, weight: .${node.attrs.weight}` : '';
+        return `.systemFont(ofSize: ${size}${weight})`;
+    }
+
+    // e.g. UICTFontTextStyleHeadline -> .headline
+    private static TextStyle(style: string): string {
+        const renamedStyles: { [style: string]: string } = { Title0: 'largeTitle', Subhead: 'subheadline' };
+        const styles = ['Title0', 'Title1', 'Title2', 'Title3', 'Headline', 'Subhead', 'Body', 'Callout', 'Footnote', 'Caption1', 'Caption2'];
+        let name = style.replace(/^UICTFontTextStyle/, '');
+        if (!styles.includes(name)) {
+            return `UIFont.TextStyle(rawValue: ${swiftString(style)})`;
+        }
+        return `.${renamedStyles[name] ?? lowerFirstletter(name)}`;
     }
 
     public static resolveSetMethodForProperty(propertyName: string, propertyValue: string): string {
