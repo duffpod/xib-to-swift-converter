@@ -1,19 +1,29 @@
-import { XibNode, Constraint, Constraints } from "../types/entities";
-import { resolveIdToPropetyName } from "../types/xib_model";
+import { XibNode, Constraint, Constraints, LayoutConstraint, UIDeclaration } from "../types/entities";
+import { Xib, resolveIdToPropetyName } from "../types/xib_model";
 
 export class ConstraintsDeclaritonsGen {
 
     private constraints: Constraints;
+    private prioritizedConstraints: string;
+    private outletDeclarations: UIDeclaration[];
 
     public constructor() {
         this.constraints = {};
+        this.prioritizedConstraints = '';
+        this.outletDeclarations = [];
     }
 
     public generateConstraintsDeclarations(nodes: XibNode[]): string {
         for (const constraint of nodes) {
             this.resolveConstraintsDeclarations(constraint.content);
         }
-        return `NSLayoutConstraint.activate([${this.organizeConstraintsDeclarations()}])\n`;
+        let prioritizedConstraints = this.prioritizedConstraints != '' ? this.prioritizedConstraints + '\n' : '';
+        return `${prioritizedConstraints}NSLayoutConstraint.activate([${this.organizeConstraintsDeclarations()}])\n`;
+    }
+
+    // Declarations of constraints connected to IBOutlets, filled by generateConstraintsDeclarations
+    public generateOutletDeclarations(): UIDeclaration[] {
+        return this.outletDeclarations;
     }
 
     private resolveConstraintsDeclarations(nodes: XibNode[]): void {
@@ -23,53 +33,110 @@ export class ConstraintsDeclaritonsGen {
             let grandFather = node.father?.father;
             if (grandFather == undefined) { console.log('\nerror\n'); continue; }
 
-            let parameters = node.attrs.constant != undefined ? `, constant: ${node.attrs.constant}` : '';
-            parameters += node.attrs.multiplier != undefined ? `, multiplier: ${node.attrs.multiplier.replace(':', '/')}` : '';
+            let isOutlet = Xib.instace.hasOutlet(node.attrs.id);
+            let constraint: LayoutConstraint = {
+                firstItem: resolveIdToPropetyName(node.attrs.firstItem ?? grandFather.attrs.id),
+                firstAttribute: this.resolveAttribute(node.attrs.firstAttribute),
+                relation: node.attrs.relation ?? 'equal',
+                secondItem: node.attrs.secondItem != undefined ? resolveIdToPropetyName(node.attrs.secondItem) : undefined,
+                secondAttribute: node.attrs.secondAttribute != undefined ? this.resolveAttribute(node.attrs.secondAttribute) : undefined,
+                multiplier: node.attrs.multiplier?.replace(':', '/'),
+                constant: node.attrs.constant
+            };
 
-            if ((node.attrs.firstAttribute == 'width' || node.attrs.firstAttribute == 'height') && node.attrs.secondItem == undefined) {
-                this.generateConstraintWithConstant(
-                /*   element  */    resolveIdToPropetyName(grandFather.attrs.id),
-                /*    anchor  */    node.attrs.firstAttribute,
-                /*   constant  */   node.attrs.constant);
+            // Prefer `child.bottom == parent.bottom - c` over `parent.bottom == child.bottom + c`.
+            // Outlets keep the xib order, so changing their constant in code moves views the same way as before.
+            let anchor = this.baseAttribute(constraint.firstAttribute);
+            if ((anchor == 'bottom' || anchor == 'trailing') && constraint.secondItem != undefined && constraint.multiplier == undefined && !isOutlet) {
+                constraint = this.reversed(constraint);
             }
-            else if (node.attrs.firstItem == undefined) {
-                this.generateConstraint(
-                /*   element  */    resolveIdToPropetyName(grandFather.attrs.id),
-                /*    anchor  */    node.attrs.firstAttribute,
-                /* secondElement */ resolveIdToPropetyName(node.attrs.secondItem),
-                /* secondAnchor  */ node.attrs.secondAttribute.replace('Margin', ''),
-                /*   parameters  */ parameters);
-            }
-            else {
-                this.generateConstraint(
-                /*   element  */    resolveIdToPropetyName(node.attrs.firstItem),
-                /*    anchor  */    node.attrs.firstAttribute,
-                /* secondElement */ resolveIdToPropetyName(node.attrs.secondItem),
-                /* secondAnchor  */ node.attrs.secondAttribute.replace('Margin', ''),
-                /*   parameters  */ parameters);
-            }
-        }
-    }
 
-    private generateConstraint(element: string, anchor: string, secondElement: string, secondAnchor: string, parameters: string): void {
-        if (anchor == 'bottom' || anchor == 'trailing') {
-            this.pushConstraint(secondElement, {
-                anchor: secondAnchor,
-                declaration: `\t${secondElement}.${secondAnchor}Anchor.constraint(equalTo: ${element}.${anchor}Anchor${parameters.replace('constant: ', 'constant: -')}),\n`
+            let declaration = this.buildConstraint(constraint);
+            let priority = node.attrs.priority != undefined && node.attrs.priority != '1000' ? node.attrs.priority : undefined;
+            if (isOutlet || priority != undefined) {
+                let name = resolveIdToPropetyName(node.attrs.id);
+                if (isOutlet) {
+                    this.outletDeclarations.push({
+                        viewName: name,
+                        declaration: this.buildOutletDeclaration(name, declaration, priority)
+                    });
+                } else {
+                    this.prioritizedConstraints += `let ${name} = ${declaration}\n${name}.priority = UILayoutPriority(${priority})\n`;
+                }
+                declaration = name;
+            }
+
+            this.pushConstraint(constraint.firstItem, {
+                anchor: this.baseAttribute(constraint.firstAttribute),
+                declaration: `\t${declaration},\n`
             });
-            return
         }
-        this.pushConstraint(element, {
-            anchor: anchor,
-            declaration: `\t${element}.${anchor}Anchor.constraint(equalTo: ${secondElement}.${secondAnchor}Anchor${parameters}),\n`
-        });
     }
 
-    private generateConstraintWithConstant(element: string, anchor: string, constant: string): void {
-        this.pushConstraint(element, {
-            anchor: anchor,
-            declaration: `\t${element}.${anchor}Anchor.constraint(equalToConstant: ${constant}),\n`
-        });
+    private buildConstraint(constraint: LayoutConstraint): string {
+        let firstAnchor = this.anchor(constraint.firstItem, constraint.firstAttribute);
+        if (constraint.secondItem == undefined || constraint.secondAttribute == undefined) {
+            return `${firstAnchor}.constraint(${constraint.relation}ToConstant: ${constraint.constant ?? '0'})`;
+        }
+
+        let isDimension = constraint.firstAttribute == 'width' || constraint.firstAttribute == 'height';
+        if (constraint.multiplier != undefined && !isDimension) {
+            // anchors support multiplier only for width and height
+            return `NSLayoutConstraint(item: ${constraint.firstItem}, attribute: .${constraint.firstAttribute}, relatedBy: .${constraint.relation}, ` +
+                `toItem: ${constraint.secondItem}, attribute: .${constraint.secondAttribute}, multiplier: ${constraint.multiplier}, constant: ${constraint.constant ?? '0'})`;
+        }
+
+        let parameters = constraint.multiplier != undefined ? `, multiplier: ${constraint.multiplier}` : '';
+        parameters += constraint.constant != undefined ? `, constant: ${constraint.constant}` : '';
+        return `${firstAnchor}.constraint(${constraint.relation}To: ${this.anchor(constraint.secondItem, constraint.secondAttribute)}${parameters})`;
+    }
+
+    private anchor(item: string, attribute: string): string {
+        let baseAttribute = this.baseAttribute(attribute);
+        if (baseAttribute != attribute) {
+            return `${item}.layoutMarginsGuide.${baseAttribute}Anchor`;
+        }
+        return `${item}.${attribute}Anchor`;
+    }
+
+    // xib names last baseline as `baseline`
+    private resolveAttribute(attribute: string): string {
+        return attribute == 'baseline' ? 'lastBaseline' : attribute;
+    }
+
+    // leadingMargin -> leading, centerXWithinMargins -> centerX
+    private baseAttribute(attribute: string): string {
+        return attribute.replace(/(Margin|WithinMargins)$/, '');
+    }
+
+    // first (relation) second + constant  <=>  second (reversed relation) first - constant
+    private reversed(constraint: LayoutConstraint): LayoutConstraint {
+        const reversedRelations: { [relation: string]: string } = {
+            'lessThanOrEqual': 'greaterThanOrEqual',
+            'greaterThanOrEqual': 'lessThanOrEqual'
+        };
+        let constant = constraint.constant;
+        if (constant != undefined) {
+            constant = constant.startsWith('-') ? constant.substring(1) : '-' + constant;
+        }
+        return {
+            firstItem: constraint.secondItem!,
+            firstAttribute: constraint.secondAttribute!,
+            relation: reversedRelations[constraint.relation] ?? constraint.relation,
+            secondItem: constraint.firstItem,
+            secondAttribute: constraint.firstAttribute,
+            constant: constant
+        };
+    }
+
+    private buildOutletDeclaration(name: string, declaration: string, priority?: string): string {
+        if (priority == undefined) {
+            return `\nprivate lazy var ${name}: NSLayoutConstraint = ${declaration}\n`;
+        }
+        return `\nprivate lazy var ${name}: NSLayoutConstraint = {\n` +
+            `\tlet constraint = ${declaration}\n` +
+            `\tconstraint.priority = UILayoutPriority(${priority})\n` +
+            `\treturn constraint\n}()\n`;
     }
 
     private pushConstraint(element: string, constraint: Constraint): void {
@@ -90,15 +157,12 @@ export class ConstraintsDeclaritonsGen {
     }
 
     private orderWithAnchor(constraints: Constraint[]): Constraint[] {
-        let order = ['top', 'bottom', 'leading', 'trailing', 'centerX', 'centerY', 'width', 'height'];
-        let orderedConstraints: Constraint[] = [];
-        for (const anchor of order) {
-            for (const constraint of constraints) {
-                if (constraint.anchor == anchor) {
-                    orderedConstraints.push(constraint);
-                }
-            }
-        }
-        return orderedConstraints;
+        let order = ['top', 'bottom', 'leading', 'trailing', 'left', 'right', 'centerX', 'centerY', 'firstBaseline', 'lastBaseline', 'width', 'height'];
+        // unknown anchors go last instead of being dropped
+        let rank = (constraint: Constraint) => {
+            let index = order.indexOf(constraint.anchor);
+            return index == -1 ? order.length : index;
+        };
+        return [...constraints].sort((a, b) => rank(a) - rank(b));
     }
 }

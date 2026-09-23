@@ -34,6 +34,19 @@ export interface Constraint {
     declaration: string
 }
 
+/**
+ * Interface that represents a constraint from xib: firstItem.firstAttribute (relation) secondItem.secondAttribute * multiplier + constant
+ */
+export interface LayoutConstraint {
+    firstItem: string,
+    firstAttribute: string,
+    relation: string,
+    secondItem?: string,
+    secondAttribute?: string,
+    multiplier?: string,
+    constant?: string
+}
+
 export interface UIDeclaraitonConfig {
     visibliityModifier: string,
     type: string,

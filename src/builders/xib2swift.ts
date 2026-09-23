@@ -23,11 +23,13 @@ export class Xib2Swift {
         const uiDeclarationsGenerator = new UIDeclarationsGen(this.rules);
         const viewHierarchyGenerator = new ViewHierachyGen(this.rules);
         const constraintsGenerator = new ConstraintsDeclaritonsGen();
-        this.uiDeclarations = uiDeclarationsGenerator.generateUIDeclarations(subviews);
-        this.uiDeclarationsAsList = uiDeclarationsGenerator.generateUIDelarationsAsList(subviews);
+        this.constraintDeclarations = constraintsGenerator.generateConstraintsDeclarations(this.xib.constraints);
+        const constraintOutletDeclarations = constraintsGenerator.generateOutletDeclarations();
+        this.uiDeclarations = uiDeclarationsGenerator.generateUIDeclarations(subviews) +
+            constraintOutletDeclarations.map(outlet => outlet.declaration).join('');
+        this.uiDeclarationsAsList = uiDeclarationsGenerator.generateUIDelarationsAsList(subviews).concat(constraintOutletDeclarations);
         this.viewHierarchy = viewHierarchyGenerator.generateCompleteViewHierachy(subviews);
         this.baseViewProperties = uiDeclarationsGenerator.genereteBaseViewProperties(this.xib.baseView);
-        this.constraintDeclarations = constraintsGenerator.generateConstraintsDeclarations(this.xib.constraints);
     }
 
     public convertAsNoob(): string {

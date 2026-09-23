@@ -90,6 +90,10 @@ export class Xib {
         }
     }
 
+    public hasOutlet(id: string): boolean {
+        return this.outlets.some(outlet => outlet.id == id);
+    }
+
 }
 
 export function resolveIdToPropetyName(id: string): string {

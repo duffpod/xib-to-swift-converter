@@ -202,6 +202,12 @@ export class UIDeclarationsGen {
             },
             'common': {
                 'color': () => { return `\t${tag}.${node.attrs.key} = ${Resolve.Color(node)}\n` },
+                'edgeInsets': () => {
+                    return `\t${tag}.${node.attrs.key} = UIEdgeInsets(top: ${node.attrs.top ?? 0}, left: ${node.attrs.left ?? 0}, bottom: ${node.attrs.bottom ?? 0}, right: ${node.attrs.right ?? 0})\n`
+                },
+                'directionalEdgeInsets': () => {
+                    return `\t${tag}.${node.attrs.key} = NSDirectionalEdgeInsets(top: ${node.attrs.top ?? 0}, leading: ${node.attrs.leading ?? 0}, bottom: ${node.attrs.bottom ?? 0}, trailing: ${node.attrs.trailing ?? 0})\n`
+                },
                 'fontDescription': () => {
                     let weight = node.attrs.weight != undefined ? `, weight: .${node.attrs.weight}` : '';
                     return `\t${tag}.font = .systemFont(ofSize: ${node.attrs.pointSize}${weight})\n`

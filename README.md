@@ -122,7 +122,6 @@ Will update soon -->
 Its always advisable to do enough testing on the generated code before pushing it to production.
 
 However, here are some of the Known Issues
-- Currently, there is no support to resolve `NSLayoutConstraint` when they are used via `IBOutlets`. [ *This support will soon be added.* ]
 - A few instances the constraints were breaking or might be missing. [ *This issue will be resolved in next release.* ]
 - Rest.. You say ! Feel free to [raise a bug here](https://github.com/NitishGadangi/xib-to-swift-converter/issues), whenever you face any issue.
 
