@@ -92,6 +92,9 @@ The following is the default configuration which is used by parser:
             "minValue": "minimumValue",
             "maxValue": "maximumValue"
         },
+        "switch": {
+            "on": "isOn"
+        },
         "collectionView": {
             "multipleTouchEnabled": "isMultipleTouchEnabled",
             "directionalLockEnabled": "isDirectionalLockEnabled",

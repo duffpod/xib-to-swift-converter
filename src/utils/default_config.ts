@@ -32,6 +32,9 @@ export class DefaultParserConfig {
             minValue: 'minimumValue',
             maxValue: 'maximumValue',
         },
+        switch: {
+            on: 'isOn',
+        },
         collectionView: {
             multipleTouchEnabled: 'isMultipleTouchEnabled',
             directionalLockEnabled: 'isDirectionalLockEnabled',
