@@ -15,10 +15,14 @@ export class UIDeclarationsGen {
     }
 
     private setupDeclarationConfig(node?: XibNode): UIDeclaraitonConfig {
+        let hasActions = node?.content.some(child => child.tag == 'connections' && child.content.some(connection => connection.tag == 'action')) ?? false;
+        let buttonType = node?.tag == 'button' ? node.attrs.buttonType : undefined;
         return {
             visibliityModifier: 'private ',
+            // lazy, so action target `self` is the instance and not a method reference
+            declarationKeyword: hasActions ? 'lazy var' : 'let',
             type: `UI${capitalizeFirstLetter(node?.tag ?? '')}`,
-            intializationMethod: '()',
+            intializationMethod: buttonType != undefined ? `(type: .${buttonType})` : '()',
             beforeInstaceProperties: ''
         }
     }
@@ -61,7 +65,7 @@ export class UIDeclarationsGen {
     }
 
     private buildUIDeclaration(viewName: string, variableName: string, properties: string): string {
-        return `\n${this.declationConfig.visibliityModifier}let ${viewName}: ${this.declationConfig.type} = {\n` +
+        return `\n${this.declationConfig.visibliityModifier}${this.declationConfig.declarationKeyword} ${viewName}: ${this.declationConfig.type} = {\n` +
             `${this.declationConfig.beforeInstaceProperties}` +
             `\tlet ${variableName} = ${this.declationConfig.type}${this.declationConfig.intializationMethod}` +
             `${properties}` +

@@ -49,6 +49,7 @@ export interface LayoutConstraint {
 
 export interface UIDeclaraitonConfig {
     visibliityModifier: string,
+    declarationKeyword: string,
     type: string,
     intializationMethod: string,
     beforeInstaceProperties: string,
