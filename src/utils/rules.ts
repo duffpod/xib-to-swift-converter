@@ -20,9 +20,9 @@ export class RuleEngine {
     }
 
     // properties + value combinations to ignore
-    public shouldIgnorePropertyDeclaration(tag: string, key: string, declaration: string): boolean {
+    public shouldIgnorePropertyDeclaration(variableName: string, key: string, declaration: string): boolean {
         const propertyDeclarationsToIgnore: PropertyDeclarationsToIgnore = this.parserConfig.propertyDeclarationsToIgnore ?? DefaultParserConfig.propertyDeclarationsToIgnore;
-        return declaration.trim() == `${tag}.${propertyDeclarationsToIgnore[key]}`
+        return declaration.trim() == `${variableName}.${propertyDeclarationsToIgnore[key]}`
     }
 
     // properties to ignore under each tag

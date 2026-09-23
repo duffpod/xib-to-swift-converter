@@ -1,7 +1,7 @@
 import { AditionalConfiguration, UIDeclaraitonConfig, UIDeclaration, XibNode } from "../types/entities";
 import { RuleEngine } from "../utils/rules";
 import { Resolve } from "./common_resolver";
-import { capitalizeFirstLetter, lowerFirstletter } from "../utils/utils";
+import { capitalizeFirstLetter, lowerFirstletter, variableNameForTag } from "../utils/utils";
 import { resolveIdToPropetyName } from "../types/xib_model";
 
 export class UIDeclarationsGen {
@@ -45,12 +45,12 @@ export class UIDeclarationsGen {
 
         for (const node of nodes) {
             this.declationConfig = this.setupDeclarationConfig(node);
-            let nodeTag: string = node.tag;
+            let variableName: string = variableNameForTag(node.tag);
             let viewName: string = resolveIdToPropetyName(node.attrs.id);
-            let properties: string = this.resolveAtributes(node);
-            properties += `${this.generateDeclarationForSubNodes(node.tag, node.content)}`;
+            let properties: string = this.resolveAtributes(node, variableName);
+            properties += `${this.generateDeclarationForSubNodes(node.tag, node.content, variableName)}`;
 
-            let uiDeclaration: string = this.buildUIDeclaration(viewName, nodeTag, properties);
+            let uiDeclaration: string = this.buildUIDeclaration(viewName, variableName, properties);
             uiDeclarations += uiDeclaration
             this.uiDeclarationsList.push({
                 viewName: viewName,
@@ -60,15 +60,15 @@ export class UIDeclarationsGen {
         return uiDeclarations;
     }
 
-    private buildUIDeclaration(viewName: string, nodeTag: string, properties: string): string {
+    private buildUIDeclaration(viewName: string, variableName: string, properties: string): string {
         return `\n${this.declationConfig.visibliityModifier}let ${viewName}: ${this.declationConfig.type} = {\n` +
             `${this.declationConfig.beforeInstaceProperties}` +
-            `\tlet ${nodeTag} = ${this.declationConfig.type}${this.declationConfig.intializationMethod}` +
+            `\tlet ${variableName} = ${this.declationConfig.type}${this.declationConfig.intializationMethod}` +
             `${properties}` +
-            `\treturn ${nodeTag}\n}()\n`;
+            `\treturn ${variableName}\n}()\n`;
     }
 
-    private resolveAtributes(node: XibNode): string {
+    private resolveAtributes(node: XibNode, variableName: string): string {
         let attributes = node.attrs;
         let property: string = '\n';
         for (const key in attributes) {
@@ -78,12 +78,12 @@ export class UIDeclarationsGen {
             let propertyValue = this.resolveResultValue(attributes[key], key, node);
             let attributeDeclarion: string;
             if (Resolve.propertiesWithSetMethod.includes(propertyName)) {
-                attributeDeclarion = `\t${node.tag}.${Resolve.resolveSetMethodForProperty(propertyName, propertyValue)}\n`;
+                attributeDeclarion = `\t${variableName}.${Resolve.resolveSetMethodForProperty(propertyName, propertyValue)}\n`;
             } else {
-                attributeDeclarion = `\t${node.tag}.${propertyName} = ${propertyValue}\n`;
+                attributeDeclarion = `\t${variableName}.${propertyName} = ${propertyValue}\n`;
             }
 
-            if (this.rules.shouldIgnorePropertyDeclaration(node.tag, key, attributeDeclarion)) continue;
+            if (this.rules.shouldIgnorePropertyDeclaration(variableName, key, attributeDeclarion)) continue;
             property += attributeDeclarion;
         }
         return property;
@@ -129,46 +129,47 @@ export class UIDeclarationsGen {
         return propertyToResolve[property] != undefined ? propertyToResolve[property]() : propertyToResolve['default']();
     }
 
-    public generateDeclarationForSubNodes(tag: string, nodes: XibNode[]): string {
+    public generateDeclarationForSubNodes(tag: string, nodes: XibNode[], variableName: string = tag): string {
         let property: string = '';
         for (const node of nodes) {
-            property += this.resolveSubNode(tag, node);
+            property += this.resolveSubNode(tag, node, variableName);
         }
         return property;
     }
 
-    private resolveSubNode(tag: string, node: XibNode): string {
+    // tag picks the configuration, variableName is the view variable used in generated code
+    private resolveSubNode(tag: string, node: XibNode, variableName: string = tag): string {
         const addAditionalConfiguration: AditionalConfiguration = {
             'button': {
                 'state': () => {
                     let property = ``;
-                    property += node.attrs.title != undefined ? `\t${tag}.setTitle("${node.attrs.title ?? ''}", for: .${node.attrs.key})\n` : '';
-                    property += node.attrs.image != undefined ? `\t${tag}.setImage(${Resolve.Image(node)}, for: .${node.attrs.key})\n` : '';
-                    property += node.attrs.backgroundImage != undefined ? `\t${tag}.setBackgroundImage(${Resolve.Image(node)}, for: .${node.attrs.key})\n` : '';
+                    property += node.attrs.title != undefined ? `\t${variableName}.setTitle("${node.attrs.title ?? ''}", for: .${node.attrs.key})\n` : '';
+                    property += node.attrs.image != undefined ? `\t${variableName}.setImage(${Resolve.Image(node)}, for: .${node.attrs.key})\n` : '';
+                    property += node.attrs.backgroundImage != undefined ? `\t${variableName}.setBackgroundImage(${Resolve.Image(node)}, for: .${node.attrs.key})\n` : '';
 
                     let children = node.content;
                     for (const child of children) {
                         if (child.tag == 'color') {
-                            property += `\t${tag}.set${capitalizeFirstLetter(child.attrs.key)}(${Resolve.Color(child)}, for: .${node.attrs.key})\n`
+                            property += `\t${variableName}.set${capitalizeFirstLetter(child.attrs.key)}(${Resolve.Color(child)}, for: .${node.attrs.key})\n`
                         }
                         else if (child.tag == 'imageReference') {
-                            property += `\t${tag}.setImage(${Resolve.Image(child)}, for: .${node.attrs.key})\n`
+                            property += `\t${variableName}.setImage(${Resolve.Image(child)}, for: .${node.attrs.key})\n`
                         }
                     }
                     return property;
                 },
                 'fontDescription': () => {
                     let weight = node.attrs.weight != undefined ? `, weight: .${node.attrs.weight}` : '';
-                    return `\t${tag}.titleLabel?.font = .systemFont(ofSize: ${node.attrs.pointSize}${weight})\n`
+                    return `\t${variableName}.titleLabel?.font = .systemFont(ofSize: ${node.attrs.pointSize}${weight})\n`
                 },
                 'buttonConfiguration': () => {
-                    let property = `\t${tag}.configuration = .${node.attrs.style}()\n`;
-                    property += `\t${tag}.setTitle("${node.attrs.title ?? ''}", for: .normal)\n`;
+                    let property = `\t${variableName}.configuration = .${node.attrs.style}()\n`;
+                    property += `\t${variableName}.setTitle("${node.attrs.title ?? ''}", for: .normal)\n`;
 
                     let children = node.content;
                     for (const child of children) {
                         if (child.tag == 'color') {
-                            property += `\t${tag}.configuration?.${child.attrs.key} = ${Resolve.Color(child)}\n`;
+                            property += `\t${variableName}.configuration?.${child.attrs.key} = ${Resolve.Color(child)}\n`;
                         }
                     }
                     return property;
@@ -196,29 +197,29 @@ export class UIDeclarationsGen {
             "textField": {
                 "textInputTraits": () => {
                     let property = '';
-                    property += node.attrs.keyboardType != undefined ? `\t${tag}.keyboardType = .${node.attrs.keyboardType}\n` : '';
+                    property += node.attrs.keyboardType != undefined ? `\t${variableName}.keyboardType = .${node.attrs.keyboardType}\n` : '';
                     return property;
                 },
             },
             'common': {
-                'color': () => { return `\t${tag}.${node.attrs.key} = ${Resolve.Color(node)}\n` },
+                'color': () => { return `\t${variableName}.${node.attrs.key} = ${Resolve.Color(node)}\n` },
                 'edgeInsets': () => {
-                    return `\t${tag}.${node.attrs.key} = UIEdgeInsets(top: ${node.attrs.top ?? 0}, left: ${node.attrs.left ?? 0}, bottom: ${node.attrs.bottom ?? 0}, right: ${node.attrs.right ?? 0})\n`
+                    return `\t${variableName}.${node.attrs.key} = UIEdgeInsets(top: ${node.attrs.top ?? 0}, left: ${node.attrs.left ?? 0}, bottom: ${node.attrs.bottom ?? 0}, right: ${node.attrs.right ?? 0})\n`
                 },
                 'directionalEdgeInsets': () => {
-                    return `\t${tag}.${node.attrs.key} = NSDirectionalEdgeInsets(top: ${node.attrs.top ?? 0}, leading: ${node.attrs.leading ?? 0}, bottom: ${node.attrs.bottom ?? 0}, trailing: ${node.attrs.trailing ?? 0})\n`
+                    return `\t${variableName}.${node.attrs.key} = NSDirectionalEdgeInsets(top: ${node.attrs.top ?? 0}, leading: ${node.attrs.leading ?? 0}, bottom: ${node.attrs.bottom ?? 0}, trailing: ${node.attrs.trailing ?? 0})\n`
                 },
                 'fontDescription': () => {
                     let weight = node.attrs.weight != undefined ? `, weight: .${node.attrs.weight}` : '';
-                    return `\t${tag}.font = .systemFont(ofSize: ${node.attrs.pointSize}${weight})\n`
+                    return `\t${variableName}.font = .systemFont(ofSize: ${node.attrs.pointSize}${weight})\n`
                 },
-                //'rect': () => { return `\t${tag}.frame = CGRect(x: ${node.attrs.x}, y: ${node.attrs.y}, width: ${node.attrs.width}, height: ${node.attrs.height})\n` },
+                //'rect': () => { return `\t${variableName}.frame = CGRect(x: ${node.attrs.x}, y: ${node.attrs.y}, width: ${node.attrs.width}, height: ${node.attrs.height})\n` },
                 'connections': () => {
                     let property = '';
                     let children = node.content;
                     for (const child of children) {
                         if (child.tag == 'action') {
-                            property += `\t${tag}.addTarget(self, action: #selector(${child.attrs.selector.replace(':', '')}), for: .${child.attrs.eventType})\n`;
+                            property += `\t${variableName}.addTarget(self, action: #selector(${child.attrs.selector.replace(':', '')}), for: .${child.attrs.eventType})\n`;
                         }
                     }
                     return property
@@ -229,15 +230,15 @@ export class UIDeclarationsGen {
                     for (const child of children) {
                         if (child.attrs.type == 'number') {
                             let number = child.content[0];
-                            property += `\t${tag}.${child.attrs.keyPath} = ${number.attrs.value}\n`;
+                            property += `\t${variableName}.${child.attrs.keyPath} = ${number.attrs.value}\n`;
                         }
                         else if (child.attrs.type == 'size') {
                             let size = child.content[0];
-                            property += `\t${tag}.${child.attrs.keyPath} = CGSize(width: ${size.attrs.width}, height: ${size.attrs.height})\n`;
+                            property += `\t${variableName}.${child.attrs.keyPath} = CGSize(width: ${size.attrs.width}, height: ${size.attrs.height})\n`;
                         }
                         else if (child.attrs.type == 'color') {
                             let color = child.content[0];
-                            property += color != undefined ? `\t${tag}.${child.attrs.keyPath} = ${Resolve.Color(color)}\n` : '';
+                            property += color != undefined ? `\t${variableName}.${child.attrs.keyPath} = ${Resolve.Color(color)}\n` : '';
                         }
                     }
                     return property;

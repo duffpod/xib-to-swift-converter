@@ -1,3 +1,10 @@
+import { SWIFT_KEYWORDS } from "./constants";
+
+// local variable name for a view built from xib tag, e.g. switch -> switchView
+export function variableNameForTag(tag: string): string {
+    return SWIFT_KEYWORDS.includes(tag) ? tag + 'View' : tag;
+}
+
 export function capitalizeFirstLetter(string: string): string {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }

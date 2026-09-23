@@ -8,6 +8,15 @@ export const RegularExpressions = {
     }
 }
 
+// reserved words that can't be used as identifiers without backticks
+export const SWIFT_KEYWORDS: string[] = [
+    'associatedtype', 'class', 'deinit', 'enum', 'extension', 'fileprivate', 'func', 'import', 'init', 'inout', 'internal',
+    'let', 'operator', 'private', 'precedencegroup', 'protocol', 'public', 'rethrows', 'static', 'struct', 'subscript',
+    'typealias', 'var', 'break', 'case', 'catch', 'continue', 'default', 'defer', 'do', 'else', 'fallthrough', 'for',
+    'guard', 'if', 'in', 'repeat', 'return', 'throw', 'switch', 'where', 'while', 'Any', 'as', 'await', 'false', 'is',
+    'nil', 'self', 'Self', 'super', 'throws', 'true', 'try'
+]
+
 export const AnotationConstants = {
     IB_ACTION: '@IBAction',
     OBJC: '@objc'
