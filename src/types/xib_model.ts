@@ -12,6 +12,15 @@ const LayoutGuideNames: { [key: string]: string } = {
     safeArea: 'safeAreaLayoutGuide',
 };
 
+const XmlEntities: { [name: string]: string } = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+
+// the parser leaves most entities encoded, e.g. `&amp;` and `&#10;`
+function decodeXmlEntities(value: string): string {
+    return value.replace(/&(#x[0-9a-fA-F]+|#[0-9]+|amp|lt|gt|quot|apos);/g, (_, entity: string) =>
+        entity.startsWith('#x') ? String.fromCodePoint(parseInt(entity.substring(2), 16)) :
+            entity.startsWith('#') ? String.fromCodePoint(parseInt(entity.substring(1), 10)) : XmlEntities[entity]);
+}
+
 export class Xib {
     public static instace: Xib;
 
@@ -45,7 +54,16 @@ export class Xib {
             for (const node of nodes) {
                 if ('object' == typeof node) {
                     node.father = father;
+                    for (const key in node.attrs ?? {}) {
+                        node.attrs[key] = decodeXmlEntities(node.attrs[key]);
+                    }
+                    let text = Array.isArray(node.content) ? node.content.filter(child => 'string' == typeof child).join('') : '';
                     node.content = this.clearEmptyNodes(node.content, node);
+                    // multiline text is kept in <string key="text"> instead of an attribute
+                    if ((node.tag == 'string' || node.tag == 'mutableString') && node.attrs?.key != undefined && father != undefined) {
+                        father.attrs = father.attrs ?? {};
+                        father.attrs[node.attrs.key] = decodeXmlEntities(text);
+                    }
                     if (node.tag == 'outlet') {
                         this.outlets.push({
                             property: node.attrs.property,

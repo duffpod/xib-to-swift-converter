@@ -5,6 +5,12 @@ export function variableNameForTag(tag: string): string {
     return SWIFT_KEYWORDS.includes(tag) ? tag + 'View' : tag;
 }
 
+// Swift string literal, e.g. `"Say \"hi\"\n"`
+export function swiftString(value: string): string {
+    const escapes: { [character: string]: string } = { '\\': '\\\\', '"': '\\"', '\n': '\\n', '\r': '\\r', '\t': '\\t' };
+    return '"' + value.replace(/[\\"\n\r\t]/g, character => escapes[character]) + '"';
+}
+
 // access modifiers of IBOutlet declaration, e.g. `public private(set) `
 export function outletAccessModifiers(outletDeclaration: string, isVariable: boolean): string {
     let modifiers = (outletDeclaration.split('@IBOutlet')[1] ?? '').split(/\s(?:var|let)\s/)[0]

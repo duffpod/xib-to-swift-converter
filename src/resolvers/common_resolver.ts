@@ -1,4 +1,5 @@
 import { XibNode } from "../types/entities";
+import { swiftString } from "../utils/utils";
 
 
 export class Resolve {
@@ -34,7 +35,7 @@ export class Resolve {
             declaration = `.${node.attrs.systemColor.replace('Color', '')}`
         }
         else if (node.attrs.name != undefined) {
-            declaration = `UIColor(named: "${node.attrs.name}")`
+            declaration = `UIColor(named: ${swiftString(node.attrs.name)})`
         }
 
         return declaration;
@@ -43,16 +44,16 @@ export class Resolve {
     public static Image(node: XibNode): string {
         let declaration: string = '';
         if (node.attrs.backgroundImage != undefined) {
-            declaration = node.attrs.catalog == 'system' ? `UIImage(systemName: "${node.attrs.backgroundImage}")` : `UIImage(named: "${node.attrs.backgroundImage}")`
+            declaration = node.attrs.catalog == 'system' ? `UIImage(systemName: ${swiftString(node.attrs.backgroundImage)})` : `UIImage(named: ${swiftString(node.attrs.backgroundImage)})`
         }
         else if (node.attrs.catalog == 'system') {
-            declaration = `UIImage(systemName: "${node.attrs.image}")`
+            declaration = `UIImage(systemName: ${swiftString(node.attrs.image)})`
         }
         else if (node.attrs.name != undefined) {
-            declaration = `UIImage(named: "${node.attrs.name}")`
+            declaration = `UIImage(named: ${swiftString(node.attrs.name)})`
         }
         else if (node.attrs.image != undefined) {
-            declaration = `UIImage(named: "${node.attrs.image}")`
+            declaration = `UIImage(named: ${swiftString(node.attrs.image)})`
         }
 
         return declaration;

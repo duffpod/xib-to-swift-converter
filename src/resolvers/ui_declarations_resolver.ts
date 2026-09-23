@@ -1,7 +1,7 @@
 import { AditionalConfiguration, UIDeclaraitonConfig, UIDeclaration, XibNode } from "../types/entities";
 import { RuleEngine } from "../utils/rules";
 import { Resolve } from "./common_resolver";
-import { capitalizeFirstLetter, lowerFirstletter, variableNameForTag } from "../utils/utils";
+import { capitalizeFirstLetter, lowerFirstletter, swiftString, variableNameForTag } from "../utils/utils";
 import { resolveIdToPropetyName } from "../types/xib_model";
 
 export class UIDeclarationsGen {
@@ -109,7 +109,7 @@ export class UIDeclarationsGen {
 
     private resolveResultValue(result: string, property: string, node?: XibNode): string {
         const propertyToResolve: any = {
-            'text': () => { return `"${result}"`; },
+            'text': () => { return swiftString(result); },
             'image': () => { return node != undefined ? `${Resolve.Image(node)}` : ''; },
             'customClass': () => {
                 this.declationConfig.type = result;
@@ -127,7 +127,7 @@ export class UIDeclarationsGen {
                 return lineBreakModes[result] ?? '.byWordWrapping';
             },
             "placeholder": () => {
-                return `"${result}"`;
+                return swiftString(result);
             },
             'default': () => {
                 switch (result) {
@@ -157,7 +157,7 @@ export class UIDeclarationsGen {
             'button': {
                 'state': () => {
                     let property = ``;
-                    property += node.attrs.title != undefined ? `\t${variableName}.setTitle("${node.attrs.title ?? ''}", for: .${node.attrs.key})\n` : '';
+                    property += node.attrs.title != undefined ? `\t${variableName}.setTitle(${swiftString(node.attrs.title)}, for: .${node.attrs.key})\n` : '';
                     property += node.attrs.image != undefined ? `\t${variableName}.setImage(${Resolve.Image(node)}, for: .${node.attrs.key})\n` : '';
                     property += node.attrs.backgroundImage != undefined ? `\t${variableName}.setBackgroundImage(${Resolve.Image(node)}, for: .${node.attrs.key})\n` : '';
 
@@ -178,7 +178,7 @@ export class UIDeclarationsGen {
                 },
                 'buttonConfiguration': () => {
                     let property = `\t${variableName}.configuration = .${node.attrs.style}()\n`;
-                    property += `\t${variableName}.setTitle("${node.attrs.title ?? ''}", for: .normal)\n`;
+                    property += `\t${variableName}.setTitle(${swiftString(node.attrs.title ?? '')}, for: .normal)\n`;
 
                     let children = node.content;
                     for (const child of children) {
@@ -275,7 +275,7 @@ export class UIDeclarationsGen {
             if (key == 'secureTextEntry') {
                 property += `\t${variableName}.isSecureTextEntry = ${value == 'YES'}\n`;
             } else if (key == 'textContentType') {
-                property += `\t${variableName}.textContentType = UITextContentType(rawValue: "${value}")\n`;
+                property += `\t${variableName}.textContentType = UITextContentType(rawValue: ${swiftString(value)})\n`;
             } else {
                 property += `\t${variableName}.${key} = ${value == 'YES' ? 'true' : value == 'NO' ? 'false' : '.' + value}\n`;
             }
