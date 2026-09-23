@@ -5,6 +5,18 @@ export function variableNameForTag(tag: string): string {
     return SWIFT_KEYWORDS.includes(tag) ? tag + 'View' : tag;
 }
 
+// access modifiers of IBOutlet declaration, e.g. `public private(set) `
+export function outletAccessModifiers(outletDeclaration: string, isVariable: boolean): string {
+    let modifiers = (outletDeclaration.split('@IBOutlet')[1] ?? '').split(/\s(?:var|let)\s/)[0]
+        .split(/\s+/)
+        .filter(token => /^(open|public|internal|fileprivate|private)(\(set\))?$/.test(token));
+    if (!isVariable) {
+        // constants have no setter and can't be open
+        modifiers = modifiers.filter(token => !token.endsWith('(set)')).map(token => token == 'open' ? 'public' : token);
+    }
+    return modifiers.map(token => token + ' ').join('');
+}
+
 export function capitalizeFirstLetter(string: string): string {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }

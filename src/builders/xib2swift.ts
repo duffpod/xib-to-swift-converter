@@ -4,7 +4,7 @@ import { ConstraintsDeclaritonsGen } from '../resolvers/constraints_resolver';
 import { Xib } from '../types/xib_model';
 import { ParserConfiguration, UIDeclaration } from '../types/entities';
 import { AnotationConstants, RegularExpressions } from '../utils/constants';
-import { buildUIDeclarationsInClass, buildViewSetupCode, indentRelativeToSource } from '../utils/utils';
+import { buildUIDeclarationsInClass, buildViewSetupCode, indentRelativeToSource, outletAccessModifiers } from '../utils/utils';
 import { RuleEngine } from '../utils/rules';
 
 export class Xib2Swift {
@@ -51,9 +51,10 @@ export class Xib2Swift {
 
     public convertWithSwiftFile(inputSwiftCode: string): string {
         let swiftCodeWithOutletsReplaced: string = this.replaceOutletsWithUIDeclarations(inputSwiftCode);
-        let viewSetupCode: string = buildViewSetupCode(this.rules.setupFunctionName(), this.xib.className, this.baseViewProperties, this.viewHierarchy, this.constraintDeclarations);
+        let setupFuncName: string = this.rules.setupFunctionName();
+        let viewSetupCode: string = buildViewSetupCode(setupFuncName, this.xib.className, this.baseViewProperties, this.viewHierarchy, this.constraintDeclarations);
         return swiftCodeWithOutletsReplaced +
-            '\n// TODO: Dont forget to add setupViews func in init, viewDidLoad\n' +
+            '\n// TODO: Dont forget to add ' + setupFuncName + ' func in init, viewDidLoad\n' +
             '// TODO: Incase any indentation error, use shortcut Cmd A + Ctrl I to fix\n' +
             viewSetupCode;
     }
@@ -62,15 +63,24 @@ export class Xib2Swift {
         let swiftFileAsArray: string[] = swiftFile.split('\n');
         let replacedDeclarations: string[] = [];
         let lastReplacedIndex = swiftFileAsArray.length - 1;
+        let removedLines = new Set<number>();
 
         // inject viewDeclarations inplace of IBOutlets
         swiftFileAsArray.forEach((codeLine, codeIdx) => {
+            // attribute can be on its own line above the declaration
+            let isSeparateAttribute = /^\s*@IBOutlet\s*$/.test(codeLine) && codeIdx + 1 < swiftFileAsArray.length;
+            let outletLine = isSeparateAttribute ? codeLine + ' ' + swiftFileAsArray[codeIdx + 1].trim() : codeLine;
             for (let decIdx = 0; decIdx < this.uiDeclarationsAsList.length; decIdx++) {
                 let uiDeclaration = this.uiDeclarationsAsList[decIdx];
                 let regexPattern: RegExp = RegularExpressions.IBOUTLET_VARNAME(uiDeclaration.viewName);
-                if (regexPattern.test(codeLine)) {
-                    let uiDeclarationCode = indentRelativeToSource(codeLine, uiDeclaration.declaration.trim());
+                if (regexPattern.test(outletLine)) {
+                    // keep access level of the outlet, so code using it still compiles
+                    let declaration = uiDeclaration.declaration.trim();
+                    let isVariable = declaration.startsWith('private lazy var ');
+                    declaration = declaration.replace(/^private /, outletAccessModifiers(outletLine, isVariable));
+                    let uiDeclarationCode = indentRelativeToSource(codeLine, declaration);
                     swiftFileAsArray[codeIdx] = uiDeclarationCode + '\n';
+                    if (isSeparateAttribute) removedLines.add(codeIdx + 1);
                     replacedDeclarations.push(uiDeclaration.viewName);
                     lastReplacedIndex = codeIdx;
                     break;
@@ -95,6 +105,6 @@ export class Xib2Swift {
             swiftFileAsArray[lastReplacedIndex] += remainingDeclarationsCode;
         }
 
-        return swiftFileAsArray.join('\n');
+        return swiftFileAsArray.filter((_, codeIdx) => !removedLines.has(codeIdx)).join('\n');
     }
 }
