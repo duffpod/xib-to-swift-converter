@@ -32,6 +32,8 @@ export class ConstraintsDeclaritonsGen {
 
             let grandFather = node.father?.father;
             if (grandFather == undefined) { console.log('\nerror\n'); continue; }
+            // "Remove at build time" constraints exist only in Interface Builder
+            if (node.attrs.placeholder == 'YES') continue;
 
             let isOutlet = Xib.instace.hasOutlet(node.attrs.id);
             let constraint: LayoutConstraint = {
