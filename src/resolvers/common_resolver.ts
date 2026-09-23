@@ -3,6 +3,12 @@ import { XibNode } from "../types/entities";
 
 export class Resolve {
 
+    // values that views loaded from xib get when attribute is absent, but which differ from defaults of views created in code
+    public static xibDefaultAttributes: { [tag: string]: { [key: string]: string } } = {
+        label: { textAlignment: 'left' },
+        activityIndicatorView: { hidesWhenStopped: 'NO' },
+    };
+
     public static propertiesWithSetMethod = ['horizontalHuggingPriority', 'verticalHuggingPriority', 'horizontalCompressionResistancePriority', 'verticalCompressionResistancePriority', 'animating'];
 
     public static Color(node: XibNode): string {

@@ -53,6 +53,11 @@ export class UIDeclarationsGen {
             let viewName: string = resolveIdToPropetyName(node.attrs.id);
             let properties: string = this.resolveAtributes(node, variableName);
             properties += `${this.generateDeclarationForSubNodes(node.tag, node.content, variableName)}`;
+            // custom buttons from xib without font get 17pt, but 18pt in code
+            let isCustomButton = node.tag == 'button' && node.attrs.buttonType == undefined;
+            if (isCustomButton && !node.content.some(child => child.tag == 'fontDescription' || child.tag == 'buttonConfiguration')) {
+                properties += `\t${variableName}.titleLabel?.font = .systemFont(ofSize: 17)\n`;
+            }
 
             let uiDeclaration: string = this.buildUIDeclaration(viewName, variableName, properties);
             uiDeclarations += uiDeclaration
@@ -73,7 +78,10 @@ export class UIDeclarationsGen {
     }
 
     private resolveAtributes(node: XibNode, variableName: string): string {
-        let attributes = node.attrs;
+        let attributes = { ...node.attrs };
+        for (const [key, value] of Object.entries(Resolve.xibDefaultAttributes[node.tag] ?? {})) {
+            attributes[key] = attributes[key] ?? value;
+        }
         let property: string = '\n';
         for (const key in attributes) {
             if (this.rules.shouldIgnoreProperty(node.tag, key)) continue;
@@ -201,11 +209,10 @@ export class UIDeclarationsGen {
                 },
             },
             "textField": {
-                "textInputTraits": () => {
-                    let property = '';
-                    property += node.attrs.keyboardType != undefined ? `\t${variableName}.keyboardType = .${node.attrs.keyboardType}\n` : '';
-                    return property;
-                },
+                "textInputTraits": () => this.resolveTextInputTraits(node, variableName),
+            },
+            "textView": {
+                "textInputTraits": () => this.resolveTextInputTraits(node, variableName),
             },
             'common': {
                 'color': () => { return `\t${variableName}.${node.attrs.key} = ${Resolve.Color(node)}\n` },
@@ -256,6 +263,24 @@ export class UIDeclarationsGen {
             return addAditionalConfiguration['common'][node.tag] != undefined ? addAditionalConfiguration['common'][node.tag]() : '';
         }
         return addAditionalConfiguration[tag][node.tag] != undefined ? addAditionalConfiguration[tag][node.tag]() : ''
+    }
+
+    // absent autocapitalization means none in xib, unlike text views created in code
+    private resolveTextInputTraits(node: XibNode, variableName: string): string {
+        let traits: { [key: string]: string } = { autocapitalizationType: 'none', ...node.attrs };
+        let property = '';
+        for (const key in traits) {
+            if (key == 'key') continue;
+            let value = traits[key];
+            if (key == 'secureTextEntry') {
+                property += `\t${variableName}.isSecureTextEntry = ${value == 'YES'}\n`;
+            } else if (key == 'textContentType') {
+                property += `\t${variableName}.textContentType = UITextContentType(rawValue: "${value}")\n`;
+            } else {
+                property += `\t${variableName}.${key} = ${value == 'YES' ? 'true' : value == 'NO' ? 'false' : '.' + value}\n`;
+            }
+        }
+        return property;
     }
 
     public genereteBaseViewProperties(baseViews: XibNode[]): string {
