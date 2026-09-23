@@ -8,6 +8,7 @@ export class Resolve {
     public static xibDefaultAttributes: { [tag: string]: { [key: string]: string } } = {
         label: { textAlignment: 'left' },
         activityIndicatorView: { hidesWhenStopped: 'NO' },
+        segmentedControl: { verticalHuggingPriority: '250' },
     };
 
     public static propertiesWithSetMethod = ['horizontalHuggingPriority', 'verticalHuggingPriority', 'horizontalCompressionResistancePriority', 'verticalCompressionResistancePriority', 'animating'];

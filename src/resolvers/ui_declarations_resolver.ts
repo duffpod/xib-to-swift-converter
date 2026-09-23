@@ -17,12 +17,21 @@ export class UIDeclarationsGen {
     private setupDeclarationConfig(node?: XibNode): UIDeclaraitonConfig {
         let hasActions = node?.content.some(child => child.tag == 'connections' && child.content.some(connection => connection.tag == 'action')) ?? false;
         let buttonType = node?.tag == 'button' ? node.attrs.buttonType : undefined;
+        let segments = node?.tag == 'segmentedControl' ? node.content.find(child => child.tag == 'segments')?.content ?? [] : [];
+        let intializationMethod = '()';
+        if (buttonType != undefined) {
+            intializationMethod = `(type: .${buttonType})`;
+        } else if (segments.length > 0) {
+            // segments are created first, so that selected segment can be set
+            let items = segments.map(segment => segment.attrs?.image != undefined ? `${Resolve.Image(segment)} ?? UIImage()` : swiftString(segment.attrs?.title ?? ''));
+            intializationMethod = `(items: [${items.join(', ')}])`;
+        }
         return {
             visibliityModifier: 'private ',
             // lazy, so action target `self` is the instance and not a method reference
             declarationKeyword: hasActions ? 'lazy var' : 'let',
             type: `UI${capitalizeFirstLetter(node?.tag ?? '')}`,
-            intializationMethod: buttonType != undefined ? `(type: .${buttonType})` : '()',
+            intializationMethod: intializationMethod,
             beforeInstaceProperties: ''
         }
     }
@@ -210,6 +219,17 @@ export class UIDeclarationsGen {
             },
             "textView": {
                 "textInputTraits": () => this.resolveTextInputTraits(node, variableName),
+            },
+            'segmentedControl': {
+                // titles and images are passed to the initializer
+                'segments': () => {
+                    let property = '';
+                    node.content.forEach((segment, index) => {
+                        property += segment.attrs?.enabled == 'NO' ? `\t${variableName}.setEnabled(false, forSegmentAt: ${index})\n` : '';
+                        property += segment.attrs?.width != undefined ? `\t${variableName}.setWidth(${segment.attrs.width}, forSegmentAt: ${index})\n` : '';
+                    });
+                    return property;
+                },
             },
             'common': {
                 'color': () => { return `\t${variableName}.${node.attrs.key} = ${Resolve.Color(node)}\n` },
